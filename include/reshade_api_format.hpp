@@ -8,7 +8,7 @@
 #include <cfloat>
 #include <cstdint>
 
-namespace reshade::api
+namespace reshade { namespace api
 {
 	/// <summary>
 	/// The available data and texture formats.
@@ -446,6 +446,7 @@ namespace reshade::api
 
 		return 0;
 	}
+
 	/// <summary>
 	/// Gets the number of bytes a texture slice of the specified format <paramref name="value"/> occupies.
 	/// </summary>
@@ -456,4 +457,4 @@ namespace reshade::api
 
 		return row_pitch * height;
 	}
-}
+} }

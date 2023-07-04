@@ -2211,6 +2211,8 @@ void reshade::runtime::draw_gui_statistics()
 
 		ImGui::BeginGroup();
 
+		std::vector<bool> long_technique_name(_techniques.size());
+		size_t technique_index = 0;
 		for (const technique &tech : _techniques)
 		{
 			if (!tech.enabled)
@@ -2220,37 +2222,55 @@ void reshade::runtime::draw_gui_statistics()
 				ImGui::Text("%s (%zu passes)", tech.name.c_str(), tech.passes.size());
 			else
 				ImGui::TextUnformatted(tech.name.c_str());
+
+			long_technique_name[technique_index] = (ImGui::GetItemRectSize().x + 10.0f) > (ImGui::GetWindowWidth() * 0.33333333f);
+			if (long_technique_name[technique_index])
+				ImGui::NewLine();
+
+			technique_index++;
 		}
 
 		ImGui::EndGroup();
 		ImGui::SameLine(ImGui::GetWindowWidth() * 0.33333333f);
 		ImGui::BeginGroup();
 
+		technique_index = 0;
 		for (const technique &tech : _techniques)
 		{
 			if (!tech.enabled)
 				continue;
 
+			if (long_technique_name[technique_index])
+				ImGui::NewLine();
+
 			if (tech.average_cpu_duration != 0)
 				ImGui::Text("%*.3f ms CPU", cpu_digits + 4, tech.average_cpu_duration * 1e-6f);
 			else
 				ImGui::NewLine();
+
+			technique_index++;
 		}
 
 		ImGui::EndGroup();
 		ImGui::SameLine(ImGui::GetWindowWidth() * 0.66666666f);
 		ImGui::BeginGroup();
 
+		technique_index = 0;
 		for (const technique &tech : _techniques)
 		{
 			if (!tech.enabled)
 				continue;
+
+			if (long_technique_name[technique_index])
+				ImGui::NewLine();
 
 			// GPU timings are not available for all APIs
 			if (_gather_gpu_statistics && tech.average_gpu_duration != 0)
 				ImGui::Text("%*.3f ms GPU", gpu_digits + 4, tech.average_gpu_duration * 1e-6f);
 			else
 				ImGui::NewLine();
+
+			technique_index++;
 		}
 
 		ImGui::EndGroup();
@@ -2684,7 +2704,13 @@ void reshade::runtime::draw_gui_addons()
 
 	if (!addon_all_loaded)
 	{
+		ImGui::PushTextWrapPos();
+#  if RESHADE_ADDON_LITE
+		ImGui::TextColored(COLOR_YELLOW, "Some add-ons were not loaded because this build of ReShade has only limited add-on functionality.");
+#  else
 		ImGui::TextColored(COLOR_RED, "There were errors loading some add-ons. Check the log for more details.");
+#  endif
+		ImGui::PopTextWrapPos();
 		ImGui::Spacing();
 	}
 
