@@ -55,12 +55,12 @@ static const char *addon_event_to_string(reshade::addon_event ev)
 		CASE(init_pipeline_layout);
 		CASE(create_pipeline_layout);
 		CASE(destroy_pipeline_layout);
-		CASE(copy_descriptor_sets);
-		CASE(update_descriptor_sets);
-		CASE(init_query_pool);
-		CASE(create_query_pool);
-		CASE(destroy_query_pool);
-		CASE(get_query_pool_results);
+		CASE(copy_descriptor_tables);
+		CASE(update_descriptor_tables);
+		CASE(init_query_heap);
+		CASE(create_query_heap);
+		CASE(destroy_query_heap);
+		CASE(get_query_heap_results);
 		CASE(barrier);
 		CASE(begin_render_pass);
 		CASE(end_render_pass);
@@ -71,7 +71,7 @@ static const char *addon_event_to_string(reshade::addon_event ev)
 		CASE(bind_scissor_rects);
 		CASE(push_constants);
 		CASE(push_descriptors);
-		CASE(bind_descriptor_sets);
+		CASE(bind_descriptor_tables);
 		CASE(bind_index_buffer);
 		CASE(bind_vertex_buffers);
 		CASE(bind_stream_output_buffers);
@@ -92,7 +92,7 @@ static const char *addon_event_to_string(reshade::addon_event ev)
 		CASE(generate_mipmaps);
 		CASE(begin_query);
 		CASE(end_query);
-		CASE(copy_query_pool_results);
+		CASE(copy_query_heap_results);
 		CASE(reset_command_list);
 		CASE(close_command_list);
 		CASE(execute_command_list);
@@ -115,7 +115,7 @@ static const char *addon_event_to_string(reshade::addon_event ev)
 }
 #endif
 
-#if RESHADE_ADDON_LITE
+#if RESHADE_ADDON == 1
 bool reshade::addon_enabled = true;
 #endif
 bool reshade::addon_all_loaded = true;
@@ -180,7 +180,7 @@ void reshade::load_addons()
 #endif
 			continue;
 
-#if RESHADE_ADDON_LITE
+#if RESHADE_ADDON == 1
 		// Indicate that add-ons exist that could not be loaded because this build of ReShade has only limited add-on functionality
 		addon_all_loaded = false;
 
@@ -265,7 +265,7 @@ void reshade::unload_addons()
 	if (InterlockedDecrement(&s_reference_count) != 0)
 		return;
 
-#if RESHADE_ADDON_LITE
+#if RESHADE_ADDON == 1
 	// There are no add-ons to unload ...
 #else
 	// Create copy of add-on list before unloading, since add-ons call 'ReShadeUnregisterAddon' during 'FreeLibrary', which modifies the list
@@ -329,6 +329,8 @@ reshade::addon_info *reshade::find_addon(void *address)
 			return &(*it);
 	return nullptr;
 }
+
+#if defined(RESHADE_API_LIBRARY_EXPORT)
 
 bool ReShadeRegisterAddon(HMODULE module, uint32_t api_version)
 {
@@ -459,7 +461,7 @@ void ReShadeRegisterEvent(reshade::addon_event ev, void *callback)
 		return;
 	}
 
-#if RESHADE_ADDON_LITE
+#if RESHADE_ADDON == 1
 	// Block all application events when building without add-on loading support
 	if (info->handle != g_module_handle && (ev > reshade::addon_event::destroy_effect_runtime && ev < reshade::addon_event::present))
 	{
@@ -486,7 +488,7 @@ void ReShadeUnregisterEvent(reshade::addon_event ev, void *callback)
 	if (info == nullptr)
 		return; // Do not log an error here, since this may be called if an add-on failed to load
 
-#if RESHADE_ADDON_LITE
+#if RESHADE_ADDON == 1
 	if (info->handle != g_module_handle && (ev > reshade::addon_event::destroy_effect_runtime && ev < reshade::addon_event::present))
 		return;
 #endif
@@ -547,6 +549,8 @@ void ReShadeUnregisterOverlay(const char *title, void(*callback)(reshade::api::e
 			return item.title == title && item.callback == callback;
 		}), info->overlay_callbacks.end());
 }
+
+#endif
 
 #endif
 
