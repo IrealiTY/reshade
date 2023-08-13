@@ -5,6 +5,8 @@
 
 #pragma once
 
+#include "reshade_api_pipeline.hpp"
+#include <vector>
 #include <d3d12.h>
 
 namespace reshade::d3d12
@@ -12,6 +14,7 @@ namespace reshade::d3d12
 	static_assert(sizeof(D3D12_BOX) == sizeof(api::subresource_box));
 	static_assert(sizeof(D3D12_RECT) == sizeof(api::rect));
 	static_assert(sizeof(D3D12_VIEWPORT) == sizeof(api::viewport));
+	static_assert(sizeof(D3D12_GPU_DESCRIPTOR_HANDLE) == sizeof(api::descriptor_table));
 
 	struct pipeline_extra_data
 	{
@@ -22,6 +25,13 @@ namespace reshade::d3d12
 	struct pipeline_layout_extra_data
 	{
 		const std::pair<D3D12_DESCRIPTOR_HEAP_TYPE, UINT> *ranges;
+	};
+
+	struct query_heap_extra_data
+	{
+		UINT size;
+		ID3D12Resource *readback_resource;
+		std::pair<ID3D12Fence *, UINT64> *fences;
 	};
 
 	extern const GUID extra_data_guid;
@@ -135,8 +145,8 @@ namespace reshade::d3d12
 	inline auto to_handle(D3D12_CPU_DESCRIPTOR_HANDLE handle) { return api::resource_view { static_cast<uint64_t>(handle.ptr) }; }
 	inline auto to_handle(ID3D12PipelineState *ptr) { return api::pipeline { reinterpret_cast<uintptr_t>(ptr) }; }
 	inline auto to_handle(ID3D12RootSignature *ptr) { return api::pipeline_layout { reinterpret_cast<uintptr_t>(ptr) }; }
-	inline auto to_handle(ID3D12QueryHeap *ptr) { return api::query_pool { reinterpret_cast<uintptr_t>(ptr) }; }
-	inline auto to_handle(ID3D12DescriptorHeap *ptr) { return api::descriptor_pool { reinterpret_cast<uintptr_t>(ptr) }; }
+	inline auto to_handle(ID3D12QueryHeap *ptr) { return api::query_heap { reinterpret_cast<uintptr_t>(ptr) }; }
+	inline auto to_handle(ID3D12DescriptorHeap *ptr) { return api::descriptor_heap { reinterpret_cast<uintptr_t>(ptr) }; }
 }
 
 #pragma warning(push)
